@@ -5,7 +5,8 @@
     "moduleResolution": "NodeNext",
     "strict": true,
     "noEmit": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true
   },
-  "include": ["index.ts"]
+  "include": ["index.ts", "developer-search.ts"]
 }

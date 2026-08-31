@@ -1,6 +1,7 @@
 import type { Plugin } from "@opencode-ai/plugin";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { developerSearch } from "./developer-search.ts";
 
 const current_dir = dirname(fileURLToPath(import.meta.url));
 
@@ -25,6 +26,10 @@ export const plugin: Plugin = async () => {
       if (process.env.FIRECRAWL_API_KEY) {
         output.env.FIRECRAWL_API_KEY = process.env.FIRECRAWL_API_KEY;
       }
+    },
+
+    tool: {
+      firecrawl_developer_search: developerSearch,
     },
   };
 };

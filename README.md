@@ -1,6 +1,6 @@
 # opencode-firecrawl
 
-OpenCode plugin for [Firecrawl](https://firecrawl.dev) — gives your AI agent reliable web scraping, crawling, and search via the [Firecrawl CLI](https://github.com/firecrawl/cli).
+OpenCode plugin for [Firecrawl](https://firecrawl.dev) — gives your AI agent primary-source answers from the Firecrawl developer index, plus reliable web scraping, crawling, and search via the [Firecrawl CLI](https://github.com/firecrawl/cli).
 
 ## Installation
 
@@ -13,7 +13,9 @@ Add the plugin to your `opencode.json`:
 }
 ```
 
-Then install the Firecrawl CLI globally:
+The `firecrawl_developer_search` tool works as soon as the plugin loads, with no API key and no CLI.
+
+For the web tools (scrape, crawl, map, search, agent), install the Firecrawl CLI globally:
 
 ```bash
 npm install -g firecrawl-cli
@@ -35,6 +37,20 @@ Get an API key at [firecrawl.dev](https://firecrawl.dev).
 
 If `FIRECRAWL_API_KEY` is set in your environment, the plugin automatically passes it to shell commands.
 
+## Developer index
+
+The plugin adds a `firecrawl_developer_search` tool that searches a curated index of GitHub issues, merged pull requests, READMEs, and library documentation, and returns the **matched passages** as markdown rather than a list of links.
+
+Use it when the question is how a library behaves, what an error means, whether a bug was fixed, or what an API contract guarantees. The agent gets to answer from the issue that reported the bug, the pull request that fixed it, or the doc page that defines the contract.
+
+```
+Why does my Playwright script hang on page.goto with a service worker registered?
+```
+
+The tool takes a `query` plus optional `types` (`doc`, `issue`, `pull_request`, `readme`), `repos` (`owner/name`), `sources`, `k`, and `passages`. It needs no API key; setting `FIRECRAWL_API_KEY` only raises the rate limit. The same index is available from the shell as `firecrawl developer <query>`.
+
+The bundled `firecrawl-developer-index` skill teaches the agent which questions belong in the index, how to shape a query for an error string versus an API contract, and when to fall back to the open web instead.
+
 ## What it does
 
 This plugin registers the Firecrawl CLI skill with OpenCode. Once installed, the agent can:
@@ -44,6 +60,7 @@ This plugin registers the Firecrawl CLI skill with OpenCode. Once installed, the
 - **Map** all URLs on a website
 - **Crawl** entire websites recursively
 - **Agent** — AI-powered autonomous web data extraction
+- **Developer search** — issues, merged PRs, READMEs, and docs, with the matched passages
 
 All output is written to a `.firecrawl/` directory to avoid flooding context.
 
