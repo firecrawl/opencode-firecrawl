@@ -1,0 +1,47 @@
+name: Publish to npm
+
+# Publishes when a version bump lands on main. Authentication is npm trusted
+# publishing (OIDC), so the repo holds no npm token; the package's trusted
+# publisher on npmjs.com must name this repo and this workflow file.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - package.json
+      - .github/workflows/publish.yml
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - run: npm ci
+
+      - run: npm run check
+
+      - name: Skip a version that is already published
+        id: version
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "$NAME@$VERSION is already on npm"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.version.outputs.exists == 'false'
+        run: npm publish --provenance --access public
