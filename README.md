@@ -1,6 +1,6 @@
-# opencode-firecrawl
+# @firecrawl/opencode
 
-OpenCode plugin for [Firecrawl](https://firecrawl.dev) — gives your AI agent reliable web scraping, crawling, and search via the [Firecrawl CLI](https://github.com/firecrawl/cli).
+[OpenCode](https://opencode.ai) plugin for [Firecrawl](https://firecrawl.dev). It gives your agent primary-source answers from the Firecrawl developer index, structured data from Firecrawl Alexandria providers, and web scraping, crawling, and search through the [Firecrawl CLI](https://github.com/firecrawl/cli).
 
 ## Installation
 
@@ -9,49 +9,73 @@ Add the plugin to your `opencode.json`:
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["opencode-firecrawl"]
+  "plugin": ["@firecrawl/opencode"]
 }
 ```
 
-Then install the Firecrawl CLI globally:
+OpenCode installs it on the next start. The developer search tool works right away, with no API key and no CLI.
+
+For the web skills (scrape, crawl, map, search, agent), install the Firecrawl CLI:
 
 ```bash
-npm install -g firecrawl-cli
+npx -y firecrawl-cli@latest init -y --browser
 ```
 
 ## Authentication
 
-On first use, the agent will prompt you to authenticate. You can also set up in advance:
+Get an API key at [firecrawl.dev](https://firecrawl.dev) and export it before starting OpenCode:
 
 ```bash
-# Browser login (recommended)
-firecrawl login --browser
-
-# Or set an API key
 export FIRECRAWL_API_KEY=fc-your-api-key
 ```
 
-Get an API key at [firecrawl.dev](https://firecrawl.dev).
+With the key set, the plugin:
 
-If `FIRECRAWL_API_KEY` is set in your environment, the plugin automatically passes it to shell commands.
+- registers the `firecrawl_alexandria` tool
+- passes the key to shell commands, so the CLI is authenticated
+- raises the rate limit on developer search
 
-## What it does
+`firecrawl login --browser` authenticates the CLI alone.
 
-This plugin registers the Firecrawl CLI skill with OpenCode. Once installed, the agent can:
+## Tools
 
-- **Search** the web with optional scraping of results
-- **Scrape** any webpage to clean markdown, HTML, or structured data
-- **Map** all URLs on a website
-- **Crawl** entire websites recursively
-- **Agent** — AI-powered autonomous web data extraction
+### `firecrawl_developer_search`
 
-All output is written to a `.firecrawl/` directory to avoid flooding context.
+Searches an index of GitHub issues, merged pull requests, READMEs, and library documentation, and returns the **matched passages** as markdown rather than a list of links. Use it for how a library behaves, what an error means, whether a bug was fixed, or what an API contract guarantees.
+
+```
+Why does my Playwright script hang on page.goto with a service worker registered?
+```
+
+It takes a `query` plus optional `types` (`doc`, `issue`, `pull_request`, `readme`), `repos` (`owner/name`), `sources`, `k`, and `passages`. No API key needed.
+
+### `firecrawl_alexandria`
+
+Finds and runs [Alexandria](https://www.firecrawl.dev/alexandria) data providers: official APIs, licensed publishers, and Firecrawl indexes that return structured records instead of a web page.
+
+```
+What has the unemployment rate in California been over the last two years?
+```
+
+The agent passes `query` to discover matching capabilities with their input contract and price (free), then `provider`, `capability`, and `options` to run one. A run spends Firecrawl credits at the listed price. Runs go through the `firecrawl_alexandria` permission, matched on `provider/capability`. To confirm each one before it spends:
+
+```json
+{
+  "permission": { "firecrawl_alexandria": "ask" }
+}
+```
+
+The tool only appears when `FIRECRAWL_API_KEY` is set.
+
+## Skills
+
+The plugin bundles the Firecrawl CLI skills (search, scrape, crawl, map, interact, download, parse, agent, monitor, the developer and research indexes, and Alexandria). They teach the agent when each one fits and how to keep output in a `.firecrawl/` directory instead of the context window.
 
 ## Links
 
-- [Firecrawl CLI Documentation](https://docs.firecrawl.dev/cli)
-- [Firecrawl CLI GitHub](https://github.com/firecrawl/cli)
-- [OpenCode Plugin Docs](https://opencode.ai/docs/plugins)
+- [Firecrawl CLI documentation](https://docs.firecrawl.dev/sdks/cli)
+- [Firecrawl CLI on GitHub](https://github.com/firecrawl/cli)
+- [OpenCode plugin docs](https://opencode.ai/docs/plugins)
 
 ## License
 
