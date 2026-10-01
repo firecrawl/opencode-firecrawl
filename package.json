@@ -44,8 +44,7 @@
     ".": "./index.ts"
   },
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "dependencies": {
     "@opencode-ai/plugin": "^1.18.34"
