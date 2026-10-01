@@ -8,5 +8,7 @@
     "skipLibCheck": true,
     "allowImportingTsExtensions": true
   },
-  "include": ["index.ts", "developer-search.ts"]
+  "include": [
+    "*.ts"
+  ]
 }

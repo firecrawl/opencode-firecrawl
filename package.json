@@ -1,11 +1,12 @@
 {
-  "name": "opencode-firecrawl",
+  "name": "@firecrawl/opencode",
   "version": "1.1.0",
-  "description": "Firecrawl plugin for OpenCode - developer index search, web scraping, crawling, and search via the Firecrawl CLI",
+  "description": "Firecrawl plugin for OpenCode: developer index search, Alexandria data providers, and web scraping, crawling, and search via the Firecrawl CLI",
   "type": "module",
   "main": "index.ts",
   "files": [
     "index.ts",
+    "alexandria.ts",
     "developer-search.ts",
     "skills"
   ],
@@ -20,12 +21,13 @@
     "search",
     "data-extraction",
     "llm",
-    "ai"
+    "ai",
+    "alexandria"
   ],
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "https://github.com/firecrawl/opencode-firecrawl"
+    "url": "git+https://github.com/firecrawl/opencode-firecrawl.git"
   },
   "homepage": "https://firecrawl.dev",
   "author": {
@@ -35,8 +37,17 @@
     "check": "tsc --noEmit"
   },
   "devDependencies": {
-    "@opencode-ai/plugin": "^1.18.25",
     "@types/node": "^25.2.2",
     "typescript": "^5.0.0"
+  },
+  "exports": {
+    ".": "./index.ts"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.18.34"
   }
 }
