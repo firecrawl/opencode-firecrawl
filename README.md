@@ -42,20 +42,20 @@ npx -y firecrawl-cli@latest init -y --browser
 
 ## Authentication
 
-Get an API key at [firecrawl.dev](https://firecrawl.dev).
+On OpenCode 2, run `/connect` in the TUI (or `opencode auth login`), pick Firecrawl, and choose **Sign in with Firecrawl**. OpenCode opens Firecrawl in your browser; approve access and you are connected, with no API key to copy. OpenCode keeps the sign-in fresh on its own. Pasting an API key from [firecrawl.dev](https://firecrawl.dev) works too, as does `FIRECRAWL_API_KEY` in the environment. Connecting or disconnecting takes effect without a restart.
 
-On OpenCode 2, connect Firecrawl with `/connect` in the TUI (or `opencode auth login`). This is the same Firecrawl connection OpenCode's built-in web search uses. Connecting or disconnecting takes effect without a restart. `FIRECRAWL_API_KEY` in the environment works too.
+The browser sign-in is used by this plugin's tools and the Firecrawl CLI. OpenCode's built-in Firecrawl web search reads only an API key.
 
-On OpenCode 1, export the key before starting OpenCode:
+On OpenCode 1, export an API key before starting OpenCode:
 
 ```bash
 export FIRECRAWL_API_KEY=fc-your-api-key
 ```
 
-With a key, the plugin:
+Once connected, the plugin:
 
 - registers the `firecrawl_alexandria` tool
-- passes the key to shell commands, so the CLI is authenticated
+- passes the credential to shell commands, so the CLI is authenticated
 - raises the rate limit on developer search
 
 `firecrawl login --browser` authenticates the CLI alone.
