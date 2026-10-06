@@ -76,7 +76,41 @@ function render(response: SearchResponse, scope: Scope) {
   return [...blocks, ...notes].join("\n\n");
 }
 
-export const developerSearch = tool({
+const z = tool.schema;
+
+const input = z.object({
+  query: z
+    .string()
+    .describe("The developer question, literal error string, or API contract to look up"),
+  k: z.number().min(1).max(100).default(10).describe("Number of results to return"),
+  types: z
+    .array(z.enum(["doc", "issue", "pull_request", "readme"]))
+    .optional()
+    .describe(
+      "Artifact kinds to search. Defaults to all four; narrowing here is the cheapest way to sharpen a query",
+    ),
+  repos: z
+    .array(z.string())
+    .optional()
+    .describe("Scope the repository half (issue, pull_request, readme) to these owner/name slugs"),
+  sources: z
+    .array(z.string())
+    .optional()
+    .describe(
+      "Scope the documentation half (doc) to these source ids, at most 20. Unions with repos rather than intersecting",
+    ),
+  passages: z
+    .number()
+    .min(1)
+    .max(5)
+    .default(1)
+    .describe(
+      "Maximum passages per result. Raise when a page is clearly right but the first passage is the wrong part of it",
+    ),
+});
+
+export const developerSearch = {
+  name: "firecrawl_developer_search",
   description: `Search a curated index of GitHub issues, merged pull requests, READMEs, and library documentation, returning the matched passages as markdown.
 
 Reach for this before a web search whenever the question is how a library or API behaves, what an error message means, whether a bug was fixed, or what an API contract guarantees. It answers from the primary source: the issue where the bug was reported, the merged PR that fixed it, the doc page that defines the contract. A blog post describing a behaviour is a weaker answer than the passage defining it.
@@ -90,47 +124,16 @@ Matching the query to the question:
 - Scoped to one library: repos ["owner/name"]. If a scoped search comes back empty, read the "Not indexed" note before rephrasing.
 
 Search broadly first, then narrow with types or repos once you have seen what the hits look like; scoping first hides the result that would have told you where to look. Quote the passages and cite the url, falling back to the url when a doc result has no title. When the index has nothing to say, comparisons, opinion, news, or an unindexed project, use the Firecrawl CLI to search or scrape the open web instead.`,
-  args: {
-    query: tool.schema
-      .string()
-      .describe("The developer question, literal error string, or API contract to look up"),
-    k: tool.schema.number().min(1).max(100).default(10).describe("Number of results to return"),
-    types: tool.schema
-      .array(tool.schema.enum(["doc", "issue", "pull_request", "readme"]))
-      .optional()
-      .describe(
-        "Artifact kinds to search. Defaults to all four; narrowing here is the cheapest way to sharpen a query",
-      ),
-    repos: tool.schema
-      .array(tool.schema.string())
-      .optional()
-      .describe("Scope the repository half (issue, pull_request, readme) to these owner/name slugs"),
-    sources: tool.schema
-      .array(tool.schema.string())
-      .optional()
-      .describe(
-        "Scope the documentation half (doc) to these source ids, at most 20. Unions with repos rather than intersecting",
-      ),
-    passages: tool.schema
-      .number()
-      .min(1)
-      .max(5)
-      .default(1)
-      .describe(
-        "Maximum passages per result. Raise when a page is clearly right but the first passage is the wrong part of it",
-      ),
-  },
-  async execute(args, context) {
+  input,
+  // Keyless by default; a key only raises the rate limit.
+  async run(args: ReturnType<typeof input.parse>, abort: AbortSignal, apiKey: string | undefined) {
     const timeout = AbortSignal.timeout(TIMEOUT_MS);
     const response = await fetch(ENDPOINT, {
       method: "POST",
-      signal: AbortSignal.any([context.abort, timeout]),
+      signal: AbortSignal.any([abort, timeout]),
       headers: {
         "Content-Type": "application/json",
-        // Keyless by default; a key only raises the rate limit.
-        ...(process.env.FIRECRAWL_API_KEY && {
-          Authorization: `Bearer ${process.env.FIRECRAWL_API_KEY}`,
-        }),
+        ...(apiKey && { Authorization: `Bearer ${apiKey}` }),
       },
       body: JSON.stringify(args),
     });
@@ -151,4 +154,4 @@ Search broadly first, then narrow with types or repos once you have seen what th
       },
     };
   },
-});
+};
