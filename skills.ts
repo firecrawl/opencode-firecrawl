@@ -48,3 +48,8 @@ export async function bundledSkills(): Promise<BundledSkill[]> {
       }),
   );
 }
+
+/** The CLI install and auth rules, for OpenCode 2, which has no config `instructions` to append a file through. */
+export async function installInstructions() {
+  return frontmatter(await readFile(join(skillsDir, "firecrawl", "rules", "install.md"), "utf8")).content;
+}

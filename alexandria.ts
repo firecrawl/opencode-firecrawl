@@ -1,4 +1,4 @@
-import { tool } from "@opencode-ai/plugin";
+import { z } from "zod";
 
 const API = "https://api.firecrawl.dev/v2";
 const TIMEOUT_MS = 120_000;
@@ -37,8 +37,6 @@ async function post<T extends ApiError>(path: string, body: unknown, apiKey: str
   throw new Error(`Alexandria request failed with ${response.status} ${response.statusText}${detail}`);
 }
 
-const z = tool.schema;
-
 const input = z.object({
   query: z.string().optional().describe("What data you need, in plain words. Finds providers"),
   provider: z.string().optional().describe('Provider slug from discovery, e.g. "bls-gov"'),
@@ -66,7 +64,7 @@ Two modes, exactly one per call:
 Discover first and only run a capability discovery returned. Check each result item for an error before using it, and report the credits the run cost. When no provider fits, fall back to web search or scraping.`,
   input,
   async run(
-    args: ReturnType<typeof input.parse>,
+    args: z.output<typeof input>,
     abort: AbortSignal,
     apiKey: string,
     confirm?: Confirm,

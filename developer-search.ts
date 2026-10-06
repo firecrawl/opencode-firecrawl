@@ -1,4 +1,4 @@
-import { tool } from "@opencode-ai/plugin";
+import { z } from "zod";
 
 const ENDPOINT = "https://api.firecrawl.dev/v2/search/developer";
 const TIMEOUT_MS = 30_000;
@@ -76,8 +76,6 @@ function render(response: SearchResponse, scope: Scope) {
   return [...blocks, ...notes].join("\n\n");
 }
 
-const z = tool.schema;
-
 const input = z.object({
   query: z
     .string()
@@ -126,7 +124,7 @@ Matching the query to the question:
 Search broadly first, then narrow with types or repos once you have seen what the hits look like; scoping first hides the result that would have told you where to look. Quote the passages and cite the url, falling back to the url when a doc result has no title. When the index has nothing to say, comparisons, opinion, news, or an unindexed project, use the Firecrawl CLI to search or scrape the open web instead.`,
   input,
   // Keyless by default; a key only raises the rate limit.
-  async run(args: ReturnType<typeof input.parse>, abort: AbortSignal, apiKey: string | undefined) {
+  async run(args: z.output<typeof input>, abort: AbortSignal, apiKey: string | undefined) {
     const timeout = AbortSignal.timeout(TIMEOUT_MS);
     const response = await fetch(ENDPOINT, {
       method: "POST",
