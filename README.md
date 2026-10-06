@@ -4,7 +4,26 @@
 
 ## Installation
 
-Add the plugin to your `opencode.json`:
+The plugin supports OpenCode 2 and OpenCode 1 (1.18.29 or later) from the same package.
+
+### OpenCode 2
+
+```bash
+opencode plugin add @firecrawl/opencode
+```
+
+Or add it to `opencode.jsonc` yourself:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugins": ["@firecrawl/opencode"]
+}
+```
+
+### OpenCode 1
+
+Add it to `opencode.json`:
 
 ```json
 {
@@ -13,7 +32,7 @@ Add the plugin to your `opencode.json`:
 }
 ```
 
-OpenCode installs it on the next start. The developer search tool works right away, with no API key and no CLI.
+OpenCode installs the package on the next start. The developer search tool works right away, with no API key and no CLI.
 
 For the web skills (scrape, crawl, map, search, agent), install the Firecrawl CLI:
 
@@ -23,13 +42,17 @@ npx -y firecrawl-cli@latest init -y --browser
 
 ## Authentication
 
-Get an API key at [firecrawl.dev](https://firecrawl.dev) and export it before starting OpenCode:
+Get an API key at [firecrawl.dev](https://firecrawl.dev).
+
+On OpenCode 2, connect Firecrawl with `/connect` in the TUI (or `opencode auth login`). This is the same Firecrawl connection OpenCode's built-in web search uses. Connecting or disconnecting takes effect without a restart. `FIRECRAWL_API_KEY` in the environment works too.
+
+On OpenCode 1, export the key before starting OpenCode:
 
 ```bash
 export FIRECRAWL_API_KEY=fc-your-api-key
 ```
 
-With the key set, the plugin:
+With a key, the plugin:
 
 - registers the `firecrawl_alexandria` tool
 - passes the key to shell commands, so the CLI is authenticated
@@ -57,7 +80,9 @@ Finds and runs [Alexandria](https://www.firecrawl.dev/alexandria) data providers
 What has the unemployment rate in California been over the last two years?
 ```
 
-The agent passes `query` to discover matching capabilities with their input contract and price (free), then `provider`, `capability`, and `options` to run one. A run spends Firecrawl credits at the listed price. Runs go through the `firecrawl_alexandria` permission, matched on `provider/capability`. To confirm each one before it spends:
+The agent passes `query` to discover matching capabilities with their input contract and price (free), then `provider`, `capability`, and `options` to run one. A run spends Firecrawl credits at the listed price. The tool only appears once a key is connected.
+
+On OpenCode 1, runs go through the `firecrawl_alexandria` permission, matched on `provider/capability`. To confirm each one before it spends:
 
 ```json
 {
@@ -65,7 +90,13 @@ The agent passes `query` to discover matching capabilities with their input cont
 }
 ```
 
-The tool only appears when `FIRECRAWL_API_KEY` is set.
+OpenCode 2 does not let plugin tools prompt for each call, so runs there are not confirmed one by one. To turn the tool off:
+
+```jsonc
+{
+  "permissions": [{ "action": "firecrawl_alexandria", "resource": "*", "effect": "deny" }]
+}
+```
 
 ## Skills
 
@@ -75,7 +106,7 @@ The plugin bundles the Firecrawl CLI skills (search, scrape, crawl, map, interac
 
 - [Firecrawl CLI documentation](https://docs.firecrawl.dev/sdks/cli)
 - [Firecrawl CLI on GitHub](https://github.com/firecrawl/cli)
-- [OpenCode plugin docs](https://opencode.ai/docs/plugins)
+- [OpenCode plugin docs](https://opencode.ai/v2/docs/plugins)
 
 ## License
 
