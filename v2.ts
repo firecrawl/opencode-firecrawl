@@ -9,9 +9,16 @@ import { bundledSkills, installInstructions } from "./skills.ts";
 const INTEGRATION = "firecrawl";
 const CONNECTION_EVENTS = new Set(["integration.updated", "credential.updated", "credential.switched"]);
 
+/** Carries a permission rejection past `result`, so OpenCode handles a denial or a declined prompt itself. */
+class PermissionRejected extends Error {
+  constructor(readonly reason: unknown) {
+    super("Permission rejected");
+  }
+}
+
 /**
  * A rejected promise reaches OpenCode 2 as a defect rather than a tool error, so failures come back as text the model
- * can act on. A cancelled call keeps rejecting, so a stop never reads as a Firecrawl failure.
+ * can act on. A cancelled call and a permission rejection keep rejecting.
  */
 async function result(
   signal: AbortSignal,
@@ -22,6 +29,7 @@ async function result(
     return { content: output, metadata: { ...metadata, title } };
   } catch (error) {
     if (signal.aborted) throw error;
+    if (error instanceof PermissionRejected) throw error.reason;
     const message =
       error instanceof z.ZodError ? z.prettifyError(error) : error instanceof Error ? error.message : String(error);
     return { content: message, metadata: { error: true } };
@@ -92,7 +100,25 @@ export const v2: Plugin.Plugin = {
             result(context.signal, async () => {
               const apiKey = await resolveKey();
               if (!apiKey) throw new Error("Firecrawl is not connected. Connect it with /connect, then try again.");
-              return alexandria.run(alexandria.input.parse(input), context.signal, apiKey);
+              // OpenCode before 2.0.29 has no permission.assert, so runs there go unconfirmed as before.
+              const confirm =
+                typeof ctx.permission?.assert === "function"
+                  ? (target: string, metadata: Record<string, unknown>) =>
+                      ctx.permission
+                        .assert({
+                          sessionID: context.sessionID,
+                          agent: context.agent,
+                          action: alexandria.name,
+                          resources: [target],
+                          save: [target],
+                          metadata,
+                          source: { type: "tool", messageID: context.messageID, id: context.id },
+                        })
+                        .catch((reason: unknown) => {
+                          throw new PermissionRejected(reason);
+                        })
+                  : undefined;
+              return alexandria.run(alexandria.input.parse(input), context.signal, apiKey, confirm);
             }),
         });
     });

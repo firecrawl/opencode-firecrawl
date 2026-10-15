@@ -32,7 +32,7 @@ Add it to `opencode.json`:
 }
 ```
 
-OpenCode installs the package on the next start. The developer search tool works right away, with no API key and no CLI.
+OpenCode installs the package on the next start. The developer search tool works right away, with no API key and no CLI. Without a key, requests from some networks (VPNs, proxies, cloud hosts) are refused; connect Firecrawl to search from there.
 
 For the web skills (scrape, crawl, map, search, agent), install the Firecrawl CLI:
 
@@ -82,19 +82,23 @@ What has the unemployment rate in California been over the last two years?
 
 The agent passes `query` to discover matching capabilities with their input contract and price (free), then `provider`, `capability`, and `options` to run one. A run spends Firecrawl credits at the listed price. The tool only appears once a key is connected.
 
-On OpenCode 1, runs go through the `firecrawl_alexandria` permission, matched on `provider/capability`. To confirm each one before it spends:
+Runs go through the `firecrawl_alexandria` permission, matched on `provider/capability`, and are allowed unless you configure it. Discovery never asks.
+
+On OpenCode 2 (2.0.29 or later), to confirm each run before it spends:
+
+```jsonc
+{
+  "permissions": [{ "action": "firecrawl_alexandria", "resource": "*", "effect": "ask" }]
+}
+```
+
+Answering "always" remembers that capability. Narrow `resource` to a provider (`"bls-gov/*"`) to ask for some runs only, and use `"effect": "deny"` to block them. Earlier OpenCode 2 releases cannot ask from a plugin tool.
+
+On OpenCode 1:
 
 ```json
 {
   "permission": { "firecrawl_alexandria": "ask" }
-}
-```
-
-OpenCode 2 does not let plugin tools prompt for each call, so runs there are not confirmed one by one. To turn the tool off:
-
-```jsonc
-{
-  "permissions": [{ "action": "firecrawl_alexandria", "resource": "*", "effect": "deny" }]
 }
 ```
 
