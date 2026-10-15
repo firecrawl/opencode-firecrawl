@@ -50,7 +50,7 @@ const input = z.object({
     .describe("Options matching the capability's contract"),
 });
 
-/** Asks the user before a run spends credits. Only OpenCode 1 can prompt from a plugin tool. */
+/** Asks the user before a run spends credits. Discovery is free and never asks. */
 type Confirm = (target: string, metadata: Record<string, unknown>) => Promise<void>;
 
 export const alexandria = {
