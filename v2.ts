@@ -3,6 +3,7 @@ import { z } from "zod";
 import { alexandria } from "./alexandria.ts";
 import { developerSearch } from "./developer-search.ts";
 import { METHOD_ID, authorize, refresh } from "./oauth.ts";
+import { scrape } from "./scrape.ts";
 import { bundledSkills, installInstructions } from "./skills.ts";
 
 /** OpenCode registers the `firecrawl` integration for its built-in web search, so `/connect` already offers it. */
@@ -64,6 +65,11 @@ export const v2: Plugin.Plugin = {
       // The env fallback covers a setup where the built-in web search plugins, and with them the integration, are disabled.
       return credential?.type === "key" ? credential.key : process.env.FIRECRAWL_API_KEY;
     };
+    const requireKey = async () => {
+      const apiKey = await resolveKey();
+      if (!apiKey) throw new Error("Firecrawl is not connected. Connect it with /connect, then try again.");
+      return apiKey;
+    };
     let connected = Boolean(await resolveKey());
 
     const [skills, instructions] = await Promise.all([bundledSkills(), installInstructions()]);
@@ -90,40 +96,46 @@ export const v2: Plugin.Plugin = {
             developerSearch.run(developerSearch.input.parse(input), context.signal, await resolveKey()),
           ),
       });
-      // Alexandria runs spend credits against an account, so the tool only exists once Firecrawl is connected.
-      if (connected)
-        editor.add({
-          name: alexandria.name,
-          description: alexandria.description,
-          input: z.toJSONSchema(alexandria.input, { io: "input" }),
-          execute: (input, context) =>
-            result(context.signal, async () => {
-              const apiKey = await resolveKey();
-              if (!apiKey) throw new Error("Firecrawl is not connected. Connect it with /connect, then try again.");
-              // OpenCode before 2.0.29 has no permission.assert, so runs there go unconfirmed as before.
-              const confirm =
-                typeof ctx.permission?.assert === "function"
-                  ? (target: string, metadata: Record<string, unknown>) =>
-                      ctx.permission
-                        .assert({
-                          sessionID: context.sessionID,
-                          agent: context.agent,
-                          action: alexandria.name,
-                          resources: [target],
-                          save: [target],
-                          metadata,
-                          source: { type: "tool", messageID: context.messageID, id: context.id },
-                        })
-                        .catch((reason: unknown) => {
-                          throw new PermissionRejected(reason);
-                        })
-                  : undefined;
-              return alexandria.run(alexandria.input.parse(input), context.signal, apiKey, confirm);
-            }),
-        });
+      // Alexandria runs and scrapes spend credits against an account, so these tools only exist once Firecrawl is connected.
+      if (!connected) return;
+      editor.add({
+        name: scrape.name,
+        description: scrape.description,
+        input: z.toJSONSchema(scrape.input, { io: "input" }),
+        execute: (input, context) =>
+          result(context.signal, async () => scrape.run(scrape.input.parse(input), context.signal, await requireKey())),
+      });
+      editor.add({
+        name: alexandria.name,
+        description: alexandria.description,
+        input: z.toJSONSchema(alexandria.input, { io: "input" }),
+        execute: (input, context) =>
+          result(context.signal, async () => {
+            const apiKey = await requireKey();
+            // OpenCode before 2.0.29 has no permission.assert, so runs there go unconfirmed as before.
+            const confirm =
+              typeof ctx.permission?.assert === "function"
+                ? (target: string, metadata: Record<string, unknown>) =>
+                    ctx.permission
+                      .assert({
+                        sessionID: context.sessionID,
+                        agent: context.agent,
+                        action: alexandria.name,
+                        resources: [target],
+                        save: [target],
+                        metadata,
+                        source: { type: "tool", messageID: context.messageID, id: context.id },
+                      })
+                      .catch((reason: unknown) => {
+                        throw new PermissionRejected(reason);
+                      })
+                : undefined;
+            return alexandria.run(alexandria.input.parse(input), context.signal, apiKey, confirm);
+          }),
+      });
     });
 
-    // Connecting or disconnecting Firecrawl mid-session adds or removes Alexandria without a restart.
+    // Connecting or disconnecting Firecrawl mid-session adds or removes Alexandria and scrape without a restart.
     const controller = new AbortController();
     void (async () => {
       for await (const event of ctx.event.subscribe({ signal: controller.signal })) {
