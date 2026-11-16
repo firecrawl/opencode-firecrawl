@@ -133,7 +133,7 @@ Search broadly first, then narrow with types or repos once you have seen what th
         "Content-Type": "application/json",
         ...(apiKey && { Authorization: `Bearer ${apiKey}` }),
       },
-      body: JSON.stringify(args),
+      body: JSON.stringify({ ...args, integration: "_opencode" }),
     });
 
     const body = (await response.json().catch(() => undefined)) as SearchResponse | undefined;
