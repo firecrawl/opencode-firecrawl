@@ -74,7 +74,7 @@ It takes a `query` plus optional `types` (`doc`, `issue`, `pull_request`, `readm
 
 ### `firecrawl_alexandria`
 
-Finds and runs [Alexandria](https://www.firecrawl.dev/alexandria) data providers: official APIs, licensed publishers, and Firecrawl indexes that return structured records instead of a web page.
+Finds and runs [Firecrawl Alexandria](https://alexandria.firecrawl.dev) data providers: official APIs, licensed publishers, and Firecrawl indexes that return structured records instead of a web page.
 
 ```
 What has the unemployment rate in California been over the last two years?
