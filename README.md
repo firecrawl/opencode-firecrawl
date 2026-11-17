@@ -1,6 +1,6 @@
 # @firecrawl/opencode
 
-[OpenCode](https://opencode.ai) plugin for [Firecrawl](https://firecrawl.dev). It gives your agent primary-source answers from the Firecrawl developer index, structured data from Firecrawl Alexandria providers, and web scraping, crawling, and search through the [Firecrawl CLI](https://github.com/firecrawl/cli).
+[OpenCode](https://opencode.ai) plugin for [Firecrawl](https://firecrawl.dev). It gives your agent primary-source answers from the Firecrawl developer index, structured data from Firecrawl Alexandria providers, a page scraping tool, and web crawling and search through the [Firecrawl CLI](https://github.com/firecrawl/cli).
 
 ## Installation
 
@@ -54,7 +54,7 @@ export FIRECRAWL_API_KEY=fc-your-api-key
 
 Once connected, the plugin:
 
-- registers the `firecrawl_alexandria` tool
+- registers the `firecrawl_scrape` and `firecrawl_alexandria` tools
 - passes the credential to shell commands, so the CLI is authenticated
 - raises the rate limit on developer search
 
@@ -71,6 +71,16 @@ Why does my Playwright script hang on page.goto with a service worker registered
 ```
 
 It takes a `query` plus optional `types` (`doc`, `issue`, `pull_request`, `readme`), `repos` (`owner/name`), `sources`, `k`, and `passages`. No API key needed.
+
+### `firecrawl_scrape`
+
+Scrapes one page and returns it as markdown, html, links, or structured json. Use it when the agent already has the URL and needs the page without the CLI.
+
+```
+What are the rate limits on https://docs.firecrawl.dev/rate-limits? Give me the numbers per plan as JSON.
+```
+
+It takes a `url` plus optional `formats` (`markdown`, `html`, `links`, `json`; defaults to `markdown`), `jsonPrompt` (required with `json`, describing what to extract), and `onlyMainContent` (on by default). Each scrape spends Firecrawl credits, so the tool only appears once a key is connected.
 
 ### `firecrawl_alexandria`
 

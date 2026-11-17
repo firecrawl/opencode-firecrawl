@@ -3,6 +3,7 @@ import { join } from "node:path";
 import type { z } from "zod";
 import { alexandria } from "./alexandria.ts";
 import { developerSearch } from "./developer-search.ts";
+import { scrape } from "./scrape.ts";
 import { skillsDir } from "./skills.ts";
 
 /** The SDK's `tool()` is an identity function; this copy keeps its argument inference without loading the V1 SDK at runtime. */
@@ -42,7 +43,7 @@ export const server: Plugin = async () => {
         args: developerSearch.input.shape,
         execute: (args, context) => developerSearch.run(args, context.abort, apiKey),
       }),
-      // Alexandria runs spend credits against an account, so the tool only exists once a key is connected.
+      // Alexandria runs and scrapes spend credits against an account, so these tools only exist once a key is connected.
       ...(apiKey && {
         [alexandria.name]: tool({
           description: alexandria.description,
@@ -51,6 +52,11 @@ export const server: Plugin = async () => {
             alexandria.run(args, context.abort, apiKey, (target, metadata) =>
               context.ask({ permission: alexandria.name, patterns: [target], always: [target], metadata }),
             ),
+        }),
+        [scrape.name]: tool({
+          description: scrape.description,
+          args: scrape.input.shape,
+          execute: (args, context) => scrape.run(args, context.abort, apiKey),
         }),
       }),
     },
