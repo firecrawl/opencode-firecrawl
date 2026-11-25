@@ -1,7 +1,7 @@
 {
   "name": "@firecrawl/opencode",
   "version": "1.4.0",
-  "description": "Firecrawl plugin for OpenCode: developer index search, Alexandria data providers, and web scraping, crawling, and search via the Firecrawl CLI",
+  "description": "Firecrawl plugin for OpenCode: developer index search, Firecrawl Alexandria data providers, and web scraping, crawling, and search via the Firecrawl CLI",
   "type": "module",
   "main": "index.ts",
   "files": [
